@@ -126,6 +126,37 @@ def random_string(length=8):
         string.ascii_lowercase) for _ in range(length))
 
 
+def create_roles_with_dependencies(path):
+    """
+    Create a number of roles.
+    """
+    role_names = []
+
+    full_path = os.path.join(path, 'role1')
+    utils.capture_shell("ansigenome init {0} -c system".format(full_path))
+    meta_path = os.path.join(full_path, 'meta', 'main.yml')
+    with open(meta_path, "w") as myfile:
+        myfile.write("---\ndependencies:\n  - { role: role2 }\n")
+    role_names.append(os.path.basename(full_path))
+
+    full_path = os.path.join(path, 'role2')
+    utils.capture_shell("ansigenome init {0} -c system".format(full_path))
+    meta_path = os.path.join(full_path, 'meta', 'main.yml')
+    with open(meta_path, "w") as myfile:
+        myfile.write("---\ndependencies:\n  - { role: role3 }\n")
+    role_names.append(os.path.basename(full_path))
+
+    role_names.append(os.path.basename(full_path))
+    full_path = os.path.join(path, 'role3')
+    utils.capture_shell("ansigenome init {0} -c system".format(full_path))
+    meta_path = os.path.join(full_path, 'meta', 'main.yml')
+    with open(meta_path, "w") as myfile:
+        myfile.write("---\ndependencies:\n  - { role: role4 }\n")
+    role_names.append(os.path.basename(full_path))
+
+    return role_names
+
+
 def create_roles(path, number=2):
     """
     Create a number of roles.

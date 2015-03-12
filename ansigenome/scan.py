@@ -6,6 +6,8 @@ import constants as c
 import ui as ui
 import utils as utils
 
+import networkx as nx
+
 from ansigenome.export import Export
 
 
@@ -14,7 +16,8 @@ class Scan(object):
     Loop over each role on the roles path and report back stats on them.
     """
     def __init__(self, args, options, config,
-                 gendoc=False, genmeta=False, export=False):
+                 gendoc=False, genmeta=False, export=False,
+                 reverse_dependencies=False):
         self.roles_path = args[0]
 
         self.options = options
@@ -22,6 +25,7 @@ class Scan(object):
         self.gendoc = gendoc
         self.genmeta = genmeta
         self.export = export
+        self.reverse_dependencies = reverse_dependencies
 
         # set the readme output format
         self.readme_format = c.ALLOWED_GENDOC_FORMATS[0]
@@ -41,6 +45,9 @@ class Scan(object):
         self.dependencies = []
         self.all_files = []
         self.yaml_files = []
+
+        if self.reverse_dependencies:
+            self.gr = nx.DiGraph()
 
         # only load and validate the readme when generating docs
         if self.gendoc:
@@ -85,6 +92,9 @@ class Scan(object):
         if self.export:
             self.export_roles()
 
+        if self.reverse_dependencies:
+            self.search_in_digraph(options)
+
     def limit_roles(self):
         """
         Limit the roles being scanned.
@@ -99,6 +109,42 @@ class Scan(object):
                     new_roles[key] = value
 
         self.roles = new_roles
+
+    def create_digraph(self):
+        """
+        Create reverse dependencie graph
+        """
+        roles = self.report["roles"]
+        for role in roles:
+            dependencies = roles[role]['dependencies']
+            self.gr.add_node(role)
+            for dependencie in dependencies:
+                self.gr.add_node(dependencie)
+                self.gr.add_edge(dependencie, role)
+
+    def search_in_digraph(self, options):
+        if not options.roles:
+            ui.error(c.MESSAGES["role_missing_out"])
+            sys.exit(1)
+
+        roles = options.roles
+        search_result = []
+        for role in roles.split(","):
+            try:
+                dependencies = list(nx.bfs_tree(self.gr, role))
+                search_result = list(set(search_result) | set(dependencies))
+            except nx.networkx.exception.NetworkXError:
+                ui.warn("",
+                        c.MESSAGES["no_role_found"].replace("%role", role),
+                        "")
+                pass
+            except:
+                print "Unexpected error:", sys.exc_info()[0]
+        if options.out_file:
+            utils.string_to_file(options.out_file,
+                                 "['" + "', '".join(search_result) + "']")
+        else:
+            print search_result
 
     def scan_roles(self):
         """
@@ -129,13 +175,18 @@ class Scan(object):
                 if self.valid_meta(key):
                     self.make_meta_dict_consistent()
                     self.write_meta(key)
-            else:
+            elif not self.reverse_dependencies:
                 self.update_scan_report(key)
 
-            if not self.config["options_quiet"] and not self.export:
-                ui.role(key,
-                        self.report["roles"][key],
-                        self.report["stats"]["longest_role_name_length"])
+            if not self.config["options_quiet"] and not self.export and \
+                    not self.reverse_dependencies:
+                        ui.role(
+                            key,
+                            self.report["roles"][key],
+                            self.report["stats"]["longest_role_name_length"]
+                            )
+        if self.reverse_dependencies:
+            return self.create_digraph()
 
         self.tally_role_columns()
 
