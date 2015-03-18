@@ -202,7 +202,7 @@ def execute_reverse_dependencies(args, options, config, parser):
     Execute reverse dependencies.
     """
     check_roles_path(args, parser)
-    Scan(args, options, config, reverse_dependencies=True)
+    # Scan(args, options, config, reverse_dependencies=True)
 
 
 def execute_init(args, options, config, parser):
