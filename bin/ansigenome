@@ -14,7 +14,6 @@ from ansigenome.config import Config
 from ansigenome.init import Init
 from ansigenome.run import Run
 from ansigenome.scan import Scan
-from ansigenome.reverse_dependencies import ReverseDependencies
 
 
 
