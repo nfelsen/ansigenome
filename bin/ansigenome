@@ -14,6 +14,9 @@ from ansigenome.config import Config
 from ansigenome.init import Init
 from ansigenome.run import Run
 from ansigenome.scan import Scan
+from ansigenome.reverse_dependencies import ReverseDependencies
+
+
 
 
 def get_action(args):
@@ -123,15 +126,21 @@ def build_option_parser(action):
         parser.add_option("-c", "--galaxy-categories",
                           dest="galaxy_categories",
                           help="comma separated string of galaxy categories")
+    elif action == "reverse_dependencies":
+        parser.set_usage("{0} -r roles [-o OUT_FILE]".format(usage_prefix))
+        parser.add_option("-r", "--roles",
+                          dest="roles",
+                          help="comma separated string of roles to do analyze")
     elif action == "run":
         parser.set_usage("{0} ROLES_PATH -m COMMAND".format
                          (usage_prefix))
         parser.add_option("-m", "--command", dest="command",
                           help="execute this shell command on each role")
-    if action in ("scan", "gendoc", "genmeta", "export", "run"):
+    if action in ("scan", "gendoc", "genmeta", "export", "run",
+                  "reverse_dependencies"):
         parser.add_option("-l", "--limit", dest="limit",
                           help="comma separated string of roles to white list")
-    if action in ("config", "export"):
+    if action in ("config", "export", "reverse_dependencies"):
         parser.add_option("-o", "--out", dest="out_file",
                           help="output file path")
 
@@ -187,6 +196,13 @@ def execute_run(args, options, config, parser):
 
     check_roles_path(args, parser)
     Run(args, options, config)
+
+def execute_reverse_dependencies(args, options, config, parser):
+    """
+    Execute reverse dependencies.
+    """
+    check_roles_path(args, parser)
+    Scan(args, options, config, reverse_dependencies=True)
 
 
 def execute_init(args, options, config, parser):
