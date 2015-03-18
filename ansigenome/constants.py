@@ -10,7 +10,7 @@ GIT_EMAIL = utils.capture_shell("git config user.email")[0][:-1]
 PACKAGE_RESOURCE = pkg_resources.resource_filename(__name__, "data")
 
 VALID_ACTIONS = ("config", "scan", "gendoc", "genmeta",
-                 "export", "init", "run")
+                 "export", "init", "run", "reverse_dependencies")
 
 ALLOWED_GENDOC_FORMATS = ("rst", "md")
 ALLOWED_GRAPH_FORMATS = ("png", "dot")
@@ -174,6 +174,11 @@ MESSAGES = {
     " and more",
     "help_init": "init new roles with a custom meta file and tests",
     "help_run": "run shell commands inside of each role's directory",
+    "help_reverse_dependencies": "generate a list of reverse dependencies" +
+    " for a given list of role",
+    "no_role_found": "No role named '%role' was found in the path",
+    "role_missing_out": "You must supply -r <role(s)> to get the list of" +
+    " reverse dependencies",
 }
 
 TEST_PATH = os.path.join(os.path.sep, "tmp", "ansigenome")
